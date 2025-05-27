@@ -61,48 +61,48 @@ if __name__ == '__main__':
 
 
 # Yang ini nggak kepakai - START
-model = load_model("lstm_model.keras")
+# model = load_model("lstm_model.keras")
 
-@app.route('/predict-bulk', methods=['POST'])
-def predict_bulk_lstm():
-    data = request.get_json()
-    current_stock = data['current_stock']
-    history = pd.DataFrame(data['history'])
-    history['date'] = pd.to_datetime(history['date'])
-    history['week'] = history['date'].dt.to_period('W').apply(lambda r: r.start_time)
+# @app.route('/predict-bulk', methods=['POST'])
+# def predict_bulk_lstm():
+#     data = request.get_json()
+#     current_stock = data['current_stock']
+#     history = pd.DataFrame(data['history'])
+#     history['date'] = pd.to_datetime(history['date'])
+#     history['week'] = history['date'].dt.to_period('W').apply(lambda r: r.start_time)
 
-    weekly = history.groupby('week').sum(numeric_only=True) 
-    weekly = weekly.tail(4)
+#     weekly = history.groupby('week').sum(numeric_only=True) 
+#     weekly = weekly.tail(4)
 
-    if len(weekly) < 4:
-        return jsonify({"error": "Data harus memiliki minimal 4 minggu riwayat penggunaan"}), 400
+#     if len(weekly) < 4:
+#         return jsonify({"error": "Data harus memiliki minimal 4 minggu riwayat penggunaan"}), 400
 
-    scalers = {}
-    scaled_weekly = weekly.copy()
-    for col in weekly.columns:
-        scaler = MinMaxScaler()
-        scaled_weekly[col] = scaler.fit_transform(weekly[[col]])
-        scalers[col] = scaler
+#     scalers = {}
+#     scaled_weekly = weekly.copy()
+#     for col in weekly.columns:
+#         scaler = MinMaxScaler()
+#         scaled_weekly[col] = scaler.fit_transform(weekly[[col]])
+#         scalers[col] = scaler
 
-    sequence = np.expand_dims(scaled_weekly.values, axis=0)
+#     sequence = np.expand_dims(scaled_weekly.values, axis=0)
 
-    pred_scaled = model.predict(sequence)[0] 
+#     pred_scaled = model.predict(sequence)[0] 
 
-    result = {}
-    for i, product in enumerate(weekly.columns):
-        forecast = scalers[product].inverse_transform([[pred_scaled[i]]])[0][0]
-        safety_stock = 0.2 * forecast
-        reorder_level = forecast + safety_stock
-        current = float(current_stock.get(product, 0))
-        stock_to_order = max(0, round(reorder_level - current))
+#     result = {}
+#     for i, product in enumerate(weekly.columns):
+#         forecast = scalers[product].inverse_transform([[pred_scaled[i]]])[0][0]
+#         safety_stock = 0.2 * forecast
+#         reorder_level = forecast + safety_stock
+#         current = float(current_stock.get(product, 0))
+#         stock_to_order = max(0, round(reorder_level - current))
 
-        result[product] = {
-            "forecasted_usage": round(forecast),
-            "current_stock": round(current),
-            "safety_stock": round(safety_stock),
-            "reorder_level": round(reorder_level),
-            "stock_to_order": stock_to_order
-        }
+#         result[product] = {
+#             "forecasted_usage": round(forecast),
+#             "current_stock": round(current),
+#             "safety_stock": round(safety_stock),
+#             "reorder_level": round(reorder_level),
+#             "stock_to_order": stock_to_order
+#         }
 
-    return jsonify(result)
+#     return jsonify(result)
 # Yang ini nggak kepakai - END
