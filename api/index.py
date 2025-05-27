@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 import pandas as pd
 import numpy as np
-from tensorflow.keras.models import load_model # type: ignore
+# from tensorflow.keras.models import load_model # type: ignore
 from sklearn.preprocessing import MinMaxScaler
 
 app = Flask(__name__)
